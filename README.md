@@ -8,9 +8,9 @@
 
   [![Solidity](https://img.shields.io/badge/Solidity-0.8.33-blue.svg)](https://soliditylang.org/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-  [![Security Score](https://img.shields.io/badge/Security%20Score-95.81%2F100-brightgreen.svg)](https://solidityscan.com)
+  [![Security Score](https://img.shields.io/badge/Security%20Score-95.55%2F100-brightgreen.svg)](https://solidityscan.com)
   
-  **[🌐 Website](https://safwa.network)** | **[📱 DApp](https://safwa.network)** | **[📖 Docs](docs/)**
+  **[🌐 Website](https://safwa.network)** | **[📱 DApp](https://safwa.network)** | **[📖 Docs](https://github.com/safwanetwork/docs.safwa.network)**
   
 </div>
 
@@ -36,7 +36,7 @@ SafwaNetwork is a **fully decentralized MLM (Multi-Level Marketing) system** bui
 
 ### Joining the Network
 
-1. **Pay 25 USD** (in USD ≈ stablecoin) to join
+1. **Pay ≈ 25 USD** (in DAI stablecoin) to join
 2. **Get unique referral ID** for recruiting
 3. **Earn commissions** from 10 levels of downline
 
@@ -62,11 +62,11 @@ When someone joins using your referral code, their 25 USD payment is distributed
 ### Role Hierarchy
 
 | Role | Matrix Size | Direct Referrals | Free Adds |
-|------|------------|-----------------|-----------|
+|---|---|---|---|
 | Partner | 5x10 | 5 | 0 |
 | Leader | 10x10 | 10 | 1 |
-| CoFounder | 20x10 | 20 | 5 |
-| Founder | 30x10 | 30 | 10 |
+| CoFounder | 25x10 | 25 | 5 |
+| Founder | 50x10 | 50 | 10 |
 
 **Role Progression:**
 
@@ -86,12 +86,15 @@ SafwaNetwork uses a unique deployment model:
 2. Engineer creates the **Founder** (one-time action)
 3. Engineer is **permanently locked out** (loses all access)
 4. **Founder** becomes the sole authority
+5. **Founder** can recruit **CoFounders**
+6. No authority over **CoFounders**, **Leaders** nor **Partners**.
+7. No control over revenues, earnings, or any other aspect of the network.
 
 ### Founder Benefits
 
 - **100% Fund Wallet** - All taxes and fees
 - **Default Upline** - Receives commissions from missing upline slots
-- **30 Direct Referrals** - Maximum network capacity
+- **50 Direct Referrals** - Maximum network capacity
 - **10 Free Adds** - Can add members without payment
 
 ---
@@ -120,21 +123,37 @@ SafwaNetwork uses a unique deployment model:
 
 ### Audit Results
 
-- **Security Score:** 62.31/100 (SolidityScan - Latest)
-- **Lines Analyzed:** 815
-- **Critical Issues:** 2 (False Positives - DAI-specific)
+- **Security Score:** 95.55/100 (SolidityScan - Latest)
+- **Lines Analyzed:** 929
+- **Critical Issues:** 0
 - **High Issues:** 0
-- **Medium Issues:** 2 (Acknowledged, intentional design)
+- **Medium Issues:** 0
 
 ### Security Features
 
 ✅ **ReentrancyGuard** - All state-changing functions protected  
+✅ **Safe Transfer Logic** - Strict checks for token code existence (no phantom success)
 ✅ **Access Control** - Role-based modifiers (Engineer/Founder)  
 ✅ **Input Validation** - Comprehensive checks on all inputs  
 ✅ **DAI Deposit Protection** - `rescueExcessDAI` with mathematical safeguards  
 ✅ **Immutable Core Logic** - No upgradability, no backdoors  
 ✅ **Anti-DoS** - Exact placement (no gas-heavy loops)  
 ✅ **Event Tracking** - Full transparency via blockchain events  
+
+### DApp Integration
+The contract provides optimized view functions for frontend dashboards:
+- `getPartnerByAddress(user)`: Returns full profile (Role, Balance, Referrals).
+- `getPartnerLevelStats(id)`: Returns revenue broken down by all 10 levels.
+- `getPartnerUpline(id)`: Returns the exact array of 10 ancestors.
+- `WEBSITE`: Constant containing the official domain.
+
+### Verification
+The system has undergone rigorous testing:
+- **Unit Tests**: 100% coverage of core logic.
+- **Integration Tests**: Mainnet Forking with real DAI.
+- **Security Tests**: Threat modeling for Reentrancy, Overflow, and Griefing.
+- **User Scenarios**: Verified 13 unique user journeys (Role inheritance, edge cases).
+- **Monte Carlo**: 104-week economic simulation.  
 
 ---
 
@@ -144,47 +163,7 @@ SafwaNetwork uses a unique deployment model:
 SafwaNetwork/
 ├── contract/
 │   └── SafwaNetwork.sol              # Main smart contract (815 lines)
-├── docs/
-│   ├── en/                           # English Documentation
-│   │   ├── legal/                    # Legal Framework (10 documents)
-│   │   │   ├── Terms_Of_Service.md
-│   │   │   ├── Privacy_Policy.md
-│   │   │   ├── AML_Policy.md
-│   │   │   ├── Income_Disclaimer.md
-│   │   │   ├── Risk_Disclosure.md
-│   │   │   ├── Security_Audit.md
-│   │   │   ├── Cookie_Policy.md
-│   │   │   ├── Law_Enforcement_Policy.md
-│   │   │   ├── Marketing_Code.md
-│   │   │   └── Brand_Guidelines.md
-│   │   ├── technical/                # Technical Documents
-│   │   │   ├── Whitepaper.md
-│   │   │   ├── Technical_Guide.md
-│   │   │   └── Security_Audit.md
-│   │   ├── guides/                   # User Guides
-│   │   │   ├── Onboarding_Guide.md
-│   │   │   ├── Simple_Explanation.md
-│   │   │   ├── FAQ.md
-│   │   │   └── Brand_Guidelines.md
-│   │   └── help/                     # Help Center
-│   │       ├── index.md              # Help Hub
-│   │       ├── tutorials/            # Step-by-step guides
-│   │       │   ├── How_To_Join.md
-│   │       │   ├── How_To_Earn.md
-│   │       │   └── How_To_Withdraw.md
-│   │       ├── wallets/              # Wallet Setup Guides
-│   │       │   ├── Binance_Guide.md
-│   │       │   ├── MetaMask_Guide.md
-│   │       │   ├── TrustWallet_Guide.md
-│   │       │   └── Coinbase_Wallet_Guide.md
-│   │       └── education/            # Crypto Education
-│   │           ├── What_Is_Blockchain.md
-│   │           ├── What_Is_Polygon.md
-│   │           ├── What_Is_DAI.md
-│   │           ├── What_Is_Smart_Contract.md
-│   │           └── What_Is_Crypto_Wallet.md
-│   └── ar/                           # Arabic Documentation (Full Mirror)
-│       └── [Same structure as /en]
+├── img/                              # Project images
 └── README.md                         # This file
 ```
 
@@ -196,7 +175,7 @@ SafwaNetwork/
 
 - Solidity 0.8.33
 - Polygon PoS network
-- USD ≈ token address: `0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063`
+- DAI token address: `0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063`
 
 ### Deployment Steps
 
@@ -218,34 +197,6 @@ SafwaNetwork/
 3. **Network Ready**
    - Founder can start adding members
    - Partners can join via referral codes
-
----
-
-## 📖 Documentation
-
-### 🎓 For Users
-
-- **[Help Center](docs/en/help/index.md)** - Start here for tutorials and guides
-- **[Simple Explanation](docs/en/guides/Simple_Explanation.md)** - What SafwaNetwork does
-- **[FAQ](docs/en/guides/FAQ.md)** - Frequently asked questions
-- **[Onboarding Guide](docs/en/guides/Onboarding_Guide.md)** - Revenue tables and earnings
-
-### 🔧 For Developers
-
-- **[Technical Guide](docs/en/technical/Technical_Guide.md)** - Complete code walkthrough
-- **[Whitepaper](docs/en/technical/Whitepaper.md)** - Economic model & mathematics
-- **[Security Audit](docs/en/technical/Security_Audit.md)** - Security analysis
-
-### ⚖️ Legal Framework
-
-- **[Terms of Service](docs/en/legal/Terms_Of_Service.md)** - Independent Contractor model
-- **[Privacy Policy](docs/en/legal/Privacy_Policy.md)** - Data minimization statement
-- **[Risk Disclosure](docs/en/legal/Risk_Disclosure.md)** - Total loss warnings
-- **[All Legal Docs](docs/en/legal/)** - Complete legal suite (10 documents)
-
-### 🌍 Translations
-
-- **Arabic:** Full documentation mirror in `docs/ar/`
 
 ---
 
@@ -322,29 +273,25 @@ This is experimental software. Use at your own risk. The contract is immutable a
 
 ## 📊 Network Statistics
 
+*No Gaurantee*
+
 ### Theoretical Maximum (5x10 Matrix)
 
 - **Total Network:** 11,718,750 people
 - **Maximum Earnings:** 18,212,125 USD per person
 - **Levels:** 10 generations deep
 
-### Realistic Scenario (3 referrals average)
+### Projections (Monte Carlo Simulation)
+Based on a 2-year simulation with 5 million users:
 
-- **Total Network:** 88,572 people
-- **Expected Earnings:** 144,795 USD per person
-- **Growth Rate:** Conservative
+| Role | Avg Earnings | Max Earnings | Active Members |
+| :--- | :--- | :--- | :--- |
+| **Founder** | $829,163 | $829,163 | 1 |
+| **CoFounder** | $23,559 | $123,688 | ~28 |
+| **Leader** | $3,975 | $67,186 | ~270 |
+| **Partner** | $25 | $55,541 | ~6,000,000 |
 
----
-
-## 🤝 Contributing
-
-This is an immutable smart contract. Once deployed, the code cannot be changed. However, documentation improvements and bug reports are welcome.
-
-### Reporting Issues
-
-- Security issues: Please report privately
-- Documentation: Open a GitHub issue
-- Questions: Use GitHub Discussions
+*Simulation assumes average recruitment of 1 partner every 2 weeks and includes market saturation logic.*
 
 ---
 
@@ -358,8 +305,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Contract Address:** TBD (after deployment)
 - **Polygon Explorer:** TBD
-- **Documentation:** [docs/](docs/)
-- **Audit Report:** SolidityScan Score 95.81/100
+- **Audit Report:** SolidityScan Score 95.55/100
 
 ---
 

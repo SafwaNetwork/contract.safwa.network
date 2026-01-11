@@ -9,24 +9,7 @@ pragma solidity 0.8.33;
  */
 
 // Minimal IERC20 Interface
-interface IERC20 {
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address account) external view returns (uint256);
-    function transfer(
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
-    function allowance(
-        address owner,
-        address spender
-    ) external view returns (uint256);
-    function approve(address spender, uint256 amount) external returns (bool);
-    function transferFrom(
-        address sender,
-        address recipient,
-        uint256 amount
-    ) external returns (bool);
-}
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // Minimal ReentrancyGuard (Gas optimized)
 abstract contract ReentrancyGuard {
@@ -55,6 +38,7 @@ contract SafwaNetwork is ReentrancyGuard {
 
     // Token Addresses
     address public constant DAI = 0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063; // Polygon DAI
+    string public constant WEBSITE = "https://github.com/SafwaNetwork/contract.safwa.network";
 
     // IDs
     uint64 public constant ENGINEER_ID = 0x1000100000; // Engineer (one-time deployer)
@@ -65,7 +49,7 @@ contract SafwaNetwork is ReentrancyGuard {
     // Fees & Limits
     /// @notice Cost to join the matrix
     uint256 public constant PARTNERSHIP_FEE = 25e18; // 25 DAI (18 decimals)
-    uint256 public constant PARTNERSHIP_FEE_SDOLLAR = 25e18; // 25 SDOLLAR (18 decimals)
+    // PARTNERSHIP_FEE_SDOLLAR removed (unused)
     uint256 public constant MIN_WITHDRAWAL = 5e18; // Must have at least 5 SDOLLAR to withdraw
 
     // Role-based Free Add Limits
@@ -80,8 +64,8 @@ contract SafwaNetwork is ReentrancyGuard {
     // Role Limits (Direct referrals Max)
     uint8 public constant LIMIT_PARTNER = 5; // 5x10 matrix
     uint8 public constant LIMIT_LEADER = 10; // 10x10 matrix
-    uint8 public constant LIMIT_COFOUNDER = 20; // 20x10 matrix
-    uint8 public constant LIMIT_FOUNDER = 30; // 30x10 matrix (max 30 CoFounders)
+    uint8 public constant LIMIT_COFOUNDER = 25; // 25x10 matrix
+    uint8 public constant LIMIT_FOUNDER = 50; // 50x10 matrix (max 50 CoFounders)
 
     // =============================================================
     //                            ENUMS
@@ -182,7 +166,7 @@ contract SafwaNetwork is ReentrancyGuard {
         uint8 level,
         uint256 amount
     );
-    event RoleChanged(uint64 indexed referralId, Role newRole);
+    // RoleChanged event removed (unused)
     event SdollarTransferred(
         uint64 indexed fromId,
         uint64 indexed toId,
@@ -220,9 +204,9 @@ contract SafwaNetwork is ReentrancyGuard {
     error NotFounder();
     error FounderNotDeployed();
     error FounderAlreadyDeployed();
-    error FounderAlreadyExists();
-    error CoFounderLimitExceeded();
-    error MustBeDirectReferralOfEngineer();
+    // FounderAlreadyExists removed (unused)
+    // CoFounderLimitExceeded removed (unused)
+    // MustBeDirectReferralOfEngineer removed (unused)
     error FreeAddLimitExceeded();
     error PartnerAlreadyExists();
     error PartnerDoesNotExist();
@@ -234,11 +218,11 @@ contract SafwaNetwork is ReentrancyGuard {
     error ReferralCapacityExceeded();
     error InvalidIdRange();
     error TransferFailed();
-    error SelfReferral();
+    // SelfReferral removed (unused)
     error ZeroAddress();
     error ZeroAmount();
     error NoFundsToDistribute();
-    error FounderNotSet();
+    // FounderNotSet removed (unused)
     error CannotRescueDAI(); // Prevent draining user deposits
     error InsufficientExcessDAI(); // Not enough excess DAI to rescue
 
@@ -277,14 +261,38 @@ contract SafwaNetwork is ReentrancyGuard {
         uint64 id = walletToId[msg.sender];
         if (id == 0) revert PartnerDoesNotExist();
         Partner storage u = partners[id];
-        if (
-            u.role != Role.FOUNDER &&
-            u.role != Role.COFOUNDER &&
-            u.role != Role.LEADER
-        ) {
+        bool isPrivileged = false;
+        if (u.role == Role.FOUNDER) isPrivileged = true;
+        else if (u.role == Role.COFOUNDER) isPrivileged = true;
+        else if (u.role == Role.LEADER) isPrivileged = true;
+
+        if (!isPrivileged) {
             revert NotFounder(); // Reusing error for simplicity
         }
         _;
+    }
+
+    /**
+     * @dev Internal helper for SafeERC20 transferFrom.
+     * checks for code existence to avoid phantom success on empty addresses.
+     */
+    function _safeTransferFrom(
+        address token,
+        address from,
+        address to,
+        uint256 value
+    ) internal {
+        if (token.code.length == 0) revert TransferFailed();
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(
+                IERC20.transferFrom.selector,
+                from,
+                to,
+                value
+            )
+        );
+        if (!success || (data.length != 0 && !abi.decode(data, (bool))))
+            revert TransferFailed();
     }
 
     // =============================================================
@@ -347,7 +355,8 @@ contract SafwaNetwork is ReentrancyGuard {
         founder.exists = true;
         founder.wallet = _founderWallet;
         founder.referralId = FOUNDER_ID;
-        founder.parentReferralId = 0; // No parent (root of network)
+        founder.referralId = FOUNDER_ID;
+        // founder.parentReferralId = 0; // Redundant initialization
         founder.role = Role.FOUNDER;
 
         // Initialize Founder Upline (all point to Founder ID - self-referencing)
@@ -392,12 +401,7 @@ contract SafwaNetwork is ReentrancyGuard {
             revert ReferralCapacityExceeded();
 
         // Collect 25 DAI from new partner
-        bool success = IERC20(DAI).transferFrom(
-            msg.sender,
-            address(this),
-            PARTNERSHIP_FEE
-        );
-        if (!success) revert TransferFailed();
+        _safeTransferFrom(DAI, msg.sender, address(this), PARTNERSHIP_FEE);
 
         totalPaidJoins++; // Track paid joins for excess DAI calculation
 
@@ -557,8 +561,19 @@ contract SafwaNetwork is ReentrancyGuard {
         // Convert SDOLLAR (18 decimals) to DAI (18 decimals) - no conversion needed
         uint256 amountDai = netAmount;
 
-        bool success = IERC20(DAI).transfer(msg.sender, amountDai);
+        // Safe Transfer Inline
+        address token = DAI;
+        address to = msg.sender;
+        uint256 value = amountDai;
+
+        if (token.code.length == 0) revert TransferFailed();
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(IERC20.transfer.selector, to, value)
+        );
         if (!success) revert TransferFailed();
+        if (data.length != 0) {
+            if (!abi.decode(data, (bool))) revert TransferFailed();
+        }
     }
 
     /**
@@ -570,17 +585,27 @@ contract SafwaNetwork is ReentrancyGuard {
     function rescueTokens(
         address _token,
         uint256 _amount
-    ) external onlyFounder {
+    ) external nonReentrant onlyFounder {
         // Prevent rescuing DAI (the deposit token)
         if (_token == DAI) {
             revert CannotRescueDAI();
         }
 
-        // Allow rescuing other accidentally sent tokens
-        bool success = IERC20(_token).transfer(msg.sender, _amount);
-        if (!success) revert TransferFailed();
-
         emit TokensRescued(_token, _amount, msg.sender);
+
+        // Safe Transfer Inline
+        if (_token.code.length == 0) revert TransferFailed();
+        (bool success, bytes memory data) = _token.call(
+            abi.encodeWithSelector(
+                IERC20.transfer.selector,
+                msg.sender,
+                _amount
+            )
+        );
+        if (!success) revert TransferFailed();
+        if (data.length != 0) {
+            if (!abi.decode(data, (bool))) revert TransferFailed();
+        }
     }
 
     /**
@@ -592,7 +617,7 @@ contract SafwaNetwork is ReentrancyGuard {
      */
     function rescueExcessDAI(
         uint256 _amount
-    ) external onlyFounder nonReentrant {
+    ) external nonReentrant onlyFounder {
         if (_amount == 0) revert ZeroAmount();
 
         uint256 currentBalance = IERC20(DAI).balanceOf(address(this));
@@ -609,10 +634,20 @@ contract SafwaNetwork is ReentrancyGuard {
 
         if (_amount > excessDAI) revert InsufficientExcessDAI();
 
-        bool success = IERC20(DAI).transfer(msg.sender, _amount);
-        if (!success) revert TransferFailed();
-
         emit ExcessDAIRescued(_amount, msg.sender);
+
+        // Safe Transfer Inline
+        address token = DAI;
+        address to = msg.sender;
+
+        if (token.code.length == 0) revert TransferFailed();
+        (bool success, bytes memory data) = token.call(
+            abi.encodeWithSelector(IERC20.transfer.selector, to, _amount)
+        );
+        if (!success) revert TransferFailed();
+        if (data.length != 0) {
+            if (!abi.decode(data, (bool))) revert TransferFailed();
+        }
     }
 
     /**
@@ -703,7 +738,11 @@ contract SafwaNetwork is ReentrancyGuard {
             uint256 count = 0;
             uint256 length = 5; // Cache array length
             for (uint i = 0; i < length; ) {
-                if (u.referrals[i] != 0) count++;
+                if (u.referrals[i] != 0) {
+                    unchecked {
+                        count++;
+                    }
+                }
                 unchecked {
                     ++i;
                 }
@@ -952,7 +991,11 @@ contract SafwaNetwork is ReentrancyGuard {
         uint256 count = 0;
         uint256 length = 5; // Cache array length
         for (uint i = 0; i < length; ) {
-            if (u.referrals[i] != 0) count++;
+            if (u.referrals[i] != 0) {
+                unchecked {
+                    count++;
+                }
+            }
             unchecked {
                 ++i;
             }

@@ -5,7 +5,7 @@ pragma solidity 0.8.33;
  * @title SafwaNetwork
  * @author Safwa Team
  * @notice A 5x10 Matrix MLM system on Polygon PoS acting as a full on-chain backend.
- * @dev Non-upgradeable, immutable, no owner override after deployment.
+ * @dev Non-upgradeable, immutable, no owner override after deployment. deployed at: https://polygonscan.com/address/0xE023d2915F028c4a34a78BD87A0b20b3FF2cf0aC
  */
 
 // Minimal IERC20 Interface

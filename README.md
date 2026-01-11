@@ -303,8 +303,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Contract Address:** TBD (after deployment)
-- **Polygon Explorer:** TBD
+- **Contract Address:** [0xE023d2915F028c4a34a78BD87A0b20b3FF2cf0aC](https://polygonscan.com/address/0xE023d2915F028c4a34a78BD87A0b20b3FF2cf0aC)
+- **Polygon Explorer:** [PolygonScan](https://polygonscan.com/address/0xE023d2915F028c4a34a78BD87A0b20b3FF2cf0aC)
 - **Audit Report:** SolidityScan Score 95.55/100
 
 ---
